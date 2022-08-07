@@ -1,0 +1,6 @@
+[submodule "externals/json"]
+	path = externals/json
+	url = https://github.com/nlohmann/json
+[submodule "externals/cpptqdm"]
+	path = externals/cpptqdm
+	url = https://github.com/aminnj/cpptqdm
