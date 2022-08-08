@@ -21,6 +21,7 @@ void QFTRouter::init(const string& typ, const string& cost) {
         apsp_ = true;
         duostra_ = false;
     } else if (typ == "duostra") {
+        apsp_ = false;
         duostra_ = true;
     } else {
         cerr << typ << " is not a router type" << endl;
@@ -88,11 +89,11 @@ size_t QFTRouter::get_gate_cost(const topo::Gate& gate,
 }
 
 vector<device::Operation> QFTRouter::assign_gate(const topo::Gate& gate) {
-    tuple<size_t, size_t> device_qubits_idx = get_device_qubits_idx(gate);
+    auto device_qubits_idx = get_device_qubits_idx(gate);
 
     if (gate.get_type() == Operator::Single) {
         assert(get<1>(device_qubits_idx) == ERROR_CODE);
-        device::Operation op =
+        auto op =
             device_.execute_single(gate.get_type(), get<0>(device_qubits_idx));
         return vector<device::Operation>(1, op);
     }
@@ -142,11 +143,11 @@ unique_ptr<QFTRouter> QFTRouter::clone() const {
 
 tuple<size_t, size_t> QFTRouter::get_device_qubits_idx(
     const topo::Gate& gate) const {
-    size_t topo_idx_q0 =
-        get<0>(gate.get_qubits());  // get operation qubit index of
-                                    // gate in topology
-    size_t device_idx_q0 =
-        topo_to_dev_[topo_idx_q0];  // get device qubit index of the gate
+    // get operation qubit index of gate in topology
+    size_t topo_idx_q0 = get<0>(gate.get_qubits());
+
+    // get device qubit index of the gate
+    size_t device_idx_q0 = topo_to_dev_[topo_idx_q0];
 
     size_t device_idx_q1 = ERROR_CODE;
 
@@ -155,8 +156,9 @@ tuple<size_t, size_t> QFTRouter::get_device_qubits_idx(
         size_t topo_idx_q1 = get<1>(gate.get_qubits());
         // gate in topology
         assert(topo_idx_q1 != ERROR_CODE);
-        device_idx_q1 = topo_to_dev_[topo_idx_q1];  // get device qubit
-                                                    // index of the gate
+
+        // get device qubit index of the gate
+        device_idx_q1 = topo_to_dev_[topo_idx_q1];
     }
     return make_tuple(device_idx_q0, device_idx_q1);
 }

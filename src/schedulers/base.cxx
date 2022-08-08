@@ -5,6 +5,7 @@
 #include "util.hxx"
 
 using namespace scheduler;
+using namespace device;
 
 Base::Base(unique_ptr<Topology> topo) : topo_(move(topo)), ops_({}) {}
 
@@ -17,7 +18,7 @@ unique_ptr<Base> Base::clone() const {
 }
 
 void Base::sort() {
-    std::sort(ops_.begin(), ops_.end(), device::op_order);
+    std::sort(ops_.begin(), ops_.end(), op_order);
     sorted_ = true;
 }
 
@@ -81,13 +82,16 @@ size_t Base::get_swap_num() const {
     return ret;
 }
 
-size_t Base::ops_cost() const {
-    return std::max_element(
-               ops_.cbegin(), ops_.cend(),
-               [](const device::Operation& a, const device::Operation& b) {
-                   return a.get_cost() < b.get_cost();
-               })
+static size_t max_op_cost(const vector<Operation>& ops) {
+    return std::max_element(ops.cbegin(), ops.cend(),
+                            [](const Operation& a, const Operation& b) {
+                                return a.get_cost() < b.get_cost();
+                            })
         ->get_cost();
+}
+
+size_t Base::ops_cost() const {
+    return max_op_cost(ops_);
 }
 
 size_t Base::get_executable(QFTRouter& router) const {
@@ -102,15 +106,12 @@ size_t Base::get_executable(QFTRouter& router) const {
 size_t Base::route_one_gate(QFTRouter& router, size_t gate_idx, bool forget) {
     const auto& gate = topo_->get_gate(gate_idx);
     auto ops{router.assign_gate(gate)};
-    size_t max_cost = 0;
-    for (const auto& op : ops) {
-        if (op.get_cost() > max_cost) {
-            max_cost = op.get_cost();
-        }
-    }
+    size_t max_cost = max_op_cost(ops);
+
     if (!forget) {
         ops_.insert(ops_.end(), ops.begin(), ops.end());
     }
+
     topo_->update_avail_gates(gate_idx);
     return max_cost;
 }

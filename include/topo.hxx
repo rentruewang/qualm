@@ -61,13 +61,7 @@ class Topology {
     const std::vector<size_t>& get_avail_gates() const { return avail_gates_; }
 
     template <bool first>
-    vector<size_t> get_gates() const;
-
-    vector<size_t> get_first_gates() const { return get_gates<true>(); }
-    vector<size_t> get_last_gates() const { return get_gates<false>(); }
-
-    unordered_map<size_t, vector<size_t>> gate_by_dist_to_first() const;
-    unordered_map<size_t, vector<size_t>> gate_by_dist_to_last() const;
+    unordered_map<size_t, vector<size_t>> gate_by() const;
 
    protected:
     // data member
@@ -82,12 +76,9 @@ class Topology {
         const unordered_map<size_t, size_t>& map);
 
     template <bool first>
+    vector<size_t> get_gates() const;
+
+    template <bool first>
     unordered_map<size_t, size_t> dist_to() const;
-    unordered_map<size_t, size_t> dist_to_first() const {
-        return dist_to<true>();
-    }
-    unordered_map<size_t, size_t> dist_to_last() const {
-        return dist_to<false>();
-    }
 };
-};  // namespace topo
+}  // namespace topo

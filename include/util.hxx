@@ -26,8 +26,8 @@ T json_get(const json& j, const char* key) {
                   << std::endl;
         abort();
     }
-// #ifdef DEBUG
+    // #ifdef DEBUG
     std::cout << "Reading: " << key << "\n";
-// #endif
+    // #endif
     return j.at(key).get<T>();
 }

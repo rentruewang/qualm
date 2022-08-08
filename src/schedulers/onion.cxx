@@ -2,110 +2,6 @@
 
 using namespace scheduler;
 
-namespace topo {
-
-template <bool first>
-vector<size_t> Topology::get_gates() const {
-    using namespace std;
-    vector<size_t> result;
-
-    for (size_t i = 0; i < get_num_gates(); ++i) {
-        const Gate& gate = get_gate(i);
-
-        bool condition = first ? gate.is_first() : gate.is_last();
-        if (condition) {
-            result.push_back(i);
-        }
-    }
-
-    return result;
-}
-
-template <bool first>
-unordered_map<size_t, size_t> Topology::dist_to() const {
-    using namespace std;
-
-    unordered_map<size_t, size_t> dist;
-    unordered_set<size_t> waiting;
-
-    auto no_preceding = [&](size_t gate_idx) -> bool {
-        const auto& gate = get_gate(gate_idx);
-
-        if (first) {
-            for (auto idx : gate.get_prevs()) {
-                if (idx == ERROR_CODE) {
-                    continue;
-                }
-                if (dist.find(idx) == dist.end()) {
-                    return false;
-                }
-            }
-            return true;
-        } else {
-            for (auto next : gate.get_nexts()) {
-                if (next == ERROR_CODE) {
-                    continue;
-                }
-                if (dist.find(next) == dist.end()) {
-                    return false;
-                }
-            }
-            return true;
-        }
-    };
-
-    auto zero_nodes = get_gates<first>();
-    for (auto node : zero_nodes) {
-        waiting.insert(node);
-    }
-
-    size_t counter = 0;
-    for (TqdmWrapper bar{get_num_gates()}; waiting.size() != 0; ++counter) {
-        const auto cloned_waiting{waiting};
-
-        vector<size_t> visited_this_cycle;
-        for (size_t idx : cloned_waiting) {
-            if (no_preceding(idx)) {
-                const auto& gate = get_gate(idx);
-
-                if (first) {
-                    for (auto next : gate.get_nexts()) {
-                        waiting.insert(next);
-                    }
-                } else {
-                    for (auto prev : gate.get_prevs()) {
-                        waiting.insert(prev);
-                    }
-                }
-
-                visited_this_cycle.push_back(idx);
-                waiting.erase(idx);
-            }
-        }
-
-        for (auto vtc : visited_this_cycle) {
-            dist[vtc] = counter;
-            ++bar;
-        }
-    }
-
-    return dist;
-}
-
-unordered_map<size_t, vector<size_t>> Topology::gate_by_dist_to_first() const {
-    auto dist{dist_to_first()};
-    std::cout << "Dist to first done\n";
-    return gate_by_generation(dist);
-}
-
-unordered_map<size_t, vector<size_t>> Topology::gate_by_dist_to_last() const {
-    auto dist{dist_to_last()};
-    std::cout << "Dist to last done\n";
-    return gate_by_generation(dist);
-}
-
-}  // namespace topo
-
 Onion::Onion(unique_ptr<Topology> topo, const json& conf)
     : Greedy(move(topo), conf),
       first_mode_(json_get<bool>(conf, "layer_from_first")) {}
@@ -120,8 +16,8 @@ void Onion::assign_gates(unique_ptr<QFTRouter> router) {
     using namespace std;
     cout << "Onion scheduler running..." << endl;
 
-    auto gen_to_gates = first_mode_ ? topo_->gate_by_dist_to_first()
-                                    : topo_->gate_by_dist_to_last();
+    auto gen_to_gates =
+        first_mode_ ? topo_->gate_by<true>() : topo_->gate_by<false>();
 
     size_t num_gates = topo_->get_num_gates();
 
@@ -161,10 +57,7 @@ void Onion::assign_generation(
 
     assert(youngest != gen_to_gates.end());
 
-    // Distance is only for debugging use.
     auto& [distance, wait_list] = *youngest;
-    // [[maybe_unused]] auto distance = youngest->first;
-    // auto& wait_list = youngest->second;
 
     for (; wait_list.size() > 0; ++bar) {
         assign_from_wait_list(router, wait_list, total_size);

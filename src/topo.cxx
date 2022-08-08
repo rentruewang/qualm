@@ -5,6 +5,12 @@
 using namespace topo;
 using namespace std;
 
+// Explicitly instantiate true/false parameter so other files can call them.
+
+template unordered_map<size_t, vector<size_t>> Topology::gate_by<true>() const;
+
+template unordered_map<size_t, vector<size_t>> Topology::gate_by<false>() const;
+
 void Topology::update_avail_gates(size_t executed) {
     assert(find(avail_gates_.cbegin(), avail_gates_.cend(), executed) !=
            avail_gates_.cend());
@@ -39,6 +45,88 @@ void Topology::update_avail_gates(size_t executed) {
     for (size_t gate_id : gates_to_trim) {
         executed_gates_.erase(gate_id);
     }
+}
+
+template <bool first>
+vector<size_t> Topology::get_gates() const {
+    using namespace std;
+    vector<size_t> result;
+
+    for (size_t i = 0; i < get_num_gates(); ++i) {
+        const Gate& gate = get_gate(i);
+
+        bool condition = first ? gate.is_first() : gate.is_last();
+        if (condition) {
+            result.push_back(i);
+        }
+    }
+
+    return result;
+}
+
+template <bool first>
+unordered_map<size_t, size_t> Topology::dist_to() const {
+    using namespace std;
+
+    unordered_map<size_t, size_t> dist;
+    unordered_set<size_t> waiting;
+
+    auto no_preceding = [&](size_t gate_idx) -> bool {
+        const auto& gate = get_gate(gate_idx);
+
+        const auto& indices = first ? gate.get_prevs() : gate.get_nexts();
+
+        return all_of(indices.cbegin(), indices.cend(), [&](size_t idx) {
+            return idx == ERROR_CODE || dist.find(idx) != dist.end();
+        });
+    };
+
+    auto zero_nodes{get_gates<first>()};
+    for (size_t node : zero_nodes) {
+        waiting.insert(node);
+    }
+
+    size_t counter = 0;
+    for (TqdmWrapper bar{get_num_gates()}; waiting.size() != 0; ++counter) {
+        const auto cloned_waiting{waiting};
+
+        vector<size_t> visited_this_cycle;
+        for (size_t idx : cloned_waiting) {
+            if (no_preceding(idx)) {
+                const auto& gate = get_gate(idx);
+
+                const auto& indices =
+                    first ? gate.get_nexts() : gate.get_prevs();
+
+                for (size_t idx : indices) {
+                    waiting.insert(idx);
+                }
+
+                visited_this_cycle.push_back(idx);
+                waiting.erase(idx);
+            }
+        }
+
+        for (auto vtc : visited_this_cycle) {
+            dist[vtc] = counter;
+            ++bar;
+        }
+    }
+
+    return dist;
+}
+
+template <bool first>
+unordered_map<size_t, vector<size_t>> Topology::gate_by() const {
+    auto dist{dist_to<first>()};
+
+    if (first) {
+        cout << "First done\n";
+    } else {
+        cout << "Last done\n";
+    }
+
+    return gate_by_generation(dist);
 }
 
 QFTTopology::QFTTopology(size_t num) {

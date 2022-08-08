@@ -1,7 +1,6 @@
 #include "stackoverflow_terminate.hxx"
 
 #include <boost/stacktrace.hpp>
-#define BOOST_STACKTRACE_USE_BACKTRACE
 
 void on_terminate() {
     try {
