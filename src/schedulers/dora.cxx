@@ -99,14 +99,14 @@ void TreeNode::route_internal_gates() {
         [[maybe_unused]] const auto& avail_gates =
             scheduler().get_avail_gates();
 
-        assert(std::find(avail_gates.begin(), avail_gates.end(), gate_idx) !=
-               avail_gates.end());
+        assert(find(avail_gates.cbegin(), avail_gates.cend(), gate_idx) !=
+               avail_gates.cend());
 
         max_cost_ = max(max_cost_,
                         scheduler_->route_one_gate(*router_, gate_idx, true));
 
-        assert(std::find(avail_gates.begin(), avail_gates.end(), gate_idx) ==
-               avail_gates.end());
+        assert(find(avail_gates.cbegin(), avail_gates.cend(), gate_idx) ==
+               avail_gates.cend());
     }
 
     // Execute additional gates if exec_single.

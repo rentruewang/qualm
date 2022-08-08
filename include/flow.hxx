@@ -8,8 +8,8 @@
 
 #pragma once
 
-size_t flow(json& conf, std::vector<size_t> assign, bool io);
+size_t flow(const json& conf, std::vector<size_t> assign, bool io);
 
-size_t device_num(json& conf);
+size_t device_num(const json& conf);
 
-size_t topo_num(json& conf);
+size_t topo_num(const json& conf);

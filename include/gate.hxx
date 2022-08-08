@@ -48,7 +48,7 @@ class Gate {
     }
 
     bool is_avail(const unordered_map<size_t, size_t>& executed_gates) const {
-        return all_of(prevs_.begin(), prevs_.end(), [&](size_t prev) -> bool {
+        return all_of(prevs_.cbegin(), prevs_.cend(), [&](size_t prev) -> bool {
             return executed_gates.find(prev) != executed_gates.end();
         });
     }

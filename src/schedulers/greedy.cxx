@@ -17,7 +17,7 @@ class TopologyCandidate {
             return gates;
         }
 
-        return std::vector<size_t>(gates.begin(), gates.begin() + cands_);
+        return {gates.cbegin(), gates.cbegin() + cands_};
     }
 
    private:
@@ -104,10 +104,10 @@ size_t Greedy::greedy_fallback(const QFTRouter& router,
     }
 
     auto list_idx = conf_.cost_typ
-                        ? max_element(cost_list.begin(), cost_list.end()) -
-                              cost_list.begin()
-                        : min_element(cost_list.begin(), cost_list.end()) -
-                              cost_list.begin();
+                        ? max_element(cost_list.cbegin(), cost_list.cend()) -
+                              cost_list.cbegin()
+                        : min_element(cost_list.cbegin(), cost_list.cend()) -
+                              cost_list.cbegin();
     return wait_list[list_idx];
 }
 

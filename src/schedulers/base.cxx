@@ -83,7 +83,7 @@ size_t Base::get_swap_num() const {
 
 size_t Base::ops_cost() const {
     return std::max_element(
-               ops_.begin(), ops_.end(),
+               ops_.cbegin(), ops_.cend(),
                [](const device::Operation& a, const device::Operation& b) {
                    return a.get_cost() < b.get_cost();
                })

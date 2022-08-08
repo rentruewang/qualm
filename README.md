@@ -1,3 +1,7 @@
+# Quantum Lean Mapper
+
+## This is my personal archive of the repository located here: https://github.com/doctry/qft-mapping
+
 # Configurations in the config file
 - `algo`: If this configuration is a number $n$, the program maps a QFT of $n$ qubits consisting of only two-qubit gates. If this configuration is a string, then the configuration should be the path to the `.qasm` file.
 - `cycle`: The cycle number of different gates.

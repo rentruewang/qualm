@@ -73,8 +73,8 @@ size_t Qubit::get_avail_time() const {
 }
 
 bool Qubit::is_adj(const Qubit& other) const {
-    return find(adj_list_.begin(), adj_list_.end(), other.id_) !=
-           adj_list_.end();
+    return find(adj_list_.cbegin(), adj_list_.cend(), other.id_) !=
+           adj_list_.cend();
 }
 
 size_t Qubit::get_topo_qubit() const {
@@ -508,7 +508,7 @@ tuple<size_t, size_t> Device::next_swap_cost(size_t source, size_t target) {
     return make_tuple(next_idx, cost);
 }
 
-void Device::place(vector<size_t>& assign) {
+void Device::place(const vector<size_t>& assign) {
     for (size_t i = 0; i < assign.size(); ++i) {
         Qubit& q = qubits_[assign[i]];
         assert(q.get_topo_qubit() == ERROR_CODE);

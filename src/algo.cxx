@@ -62,8 +62,8 @@ void AlgoTopology::parse(fstream& qasm_file, bool IBM_gate) {
         string is_CRZ = type.substr(0, 3);
 
         if (is_CX != "cx" && is_CRZ != "crz") {
-            if (find(single_list.begin(), single_list.end(), type) !=
-                single_list.end()) {
+            if (find(single_list.cbegin(), single_list.cend(), type) !=
+                single_list.cend()) {
                 qasm_file >> str;
                 string singleQubitId = str.substr(2, str.size() - 4);
 

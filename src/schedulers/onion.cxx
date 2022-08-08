@@ -179,11 +179,9 @@ void Onion::assign_from_wait_list(QFTRouter& router,
                                   size_t& total_size) {
     size_t gate_idx = executable_with_fallback(router, wait_list);
 
-    auto erase_idx = find(wait_list.begin(), wait_list.end(), gate_idx);
-    assert(erase_idx != wait_list.end());
-
-    swap(*erase_idx, *wait_list.rbegin());
-    wait_list.pop_back();
+    auto erase_idx = remove(wait_list.begin(), wait_list.end(), gate_idx);
+    assert(wait_list.end() - erase_idx == 1);
+    wait_list.erase(erase_idx, wait_list.end());
 
     --total_size;
     route_one_gate(router, gate_idx);
