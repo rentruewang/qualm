@@ -47,7 +47,7 @@ class Topology {
 
     Topology(Topology&& other)
         : dep_graph_(move(other.dep_graph_)),
-          avail_gates_(std::move(other.avail_gates_)),
+          avail_gates_(move(other.avail_gates_)),
           executed_gates_(move(other.executed_gates_)) {}
 
     virtual ~Topology() {}
@@ -58,7 +58,7 @@ class Topology {
     size_t get_num_qubits() const { return dep_graph_->get_num_qubits(); }
     size_t get_num_gates() const { return dep_graph_->gates().size(); }
     const Gate& get_gate(size_t i) const { return dep_graph_->get_gate(i); }
-    const std::vector<size_t>& get_avail_gates() const { return avail_gates_; }
+    const vector<size_t>& get_avail_gates() const { return avail_gates_; }
 
     template <bool first>
     unordered_map<size_t, vector<size_t>> gate_by() const;

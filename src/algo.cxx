@@ -23,8 +23,7 @@ unordered_map<size_t, vector<size_t>> Topology::gate_by_generation(
     }
 
     size_t count = 0;
-    for (const auto& [gate_id, gen_ids] : gen_map) {
-        (void)gate_id;
+    for ([[maybe_unused]] const auto& [_, gen_ids] : gen_map) {
         count += gen_ids.size();
     }
     assert(count == map.size() &&
@@ -136,39 +135,7 @@ void AlgoTopology::parse(fstream& qasm_file, bool IBM_gate) {
             avail_gates_.push_back(i);
         }
     }
-#ifdef DEBUG
-    print_gates_with_next();
-    print_gates_with_prev();
-#endif
 
     dep_graph_ = make_shared<DependencyGraph>(num_qubits, move(all_gates));
 }
-
-void AlgoTopology::print_gates_with_next() {
-    cout << "Print successors of each gate" << endl;
-    const auto& gates = dep_graph_->gates();
-    for (size_t i = 0; i < gates.size(); i++) {
-        vector<size_t> temp = gates[i].get_nexts();
-        cout << gates[i].get_id() << "(" << gates[i].get_type() << ") || ";
-        for (size_t j = 0; j < temp.size(); j++) {
-            cout << temp[j] << " ";
-        }
-        cout << endl;
-    }
-}
-
-void AlgoTopology::print_gates_with_prev() {
-    cout << "Print predecessors of each gate" << endl;
-    const auto& gate = dep_graph_->gates();
-    for (size_t i = 0; i < gate.size(); i++) {
-        const auto& prevs = gate.at(i).get_prevs();
-        cout << gate.at(i).get_id() << "(" << gate.at(i).get_type() << ") || ";
-
-        for (size_t j = 0; j < prevs.size(); j++) {
-            cout << prevs[j] << " ";
-        }
-        cout << endl;
-    }
-}
-
 }  // namespace topo

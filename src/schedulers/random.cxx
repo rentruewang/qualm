@@ -23,9 +23,6 @@ void Random::assign_gates(unique_ptr<QFTRouter> router) {
         size_t choose = rand() % wait_list.size();
 
         route_one_gate(*router, wait_list[choose]);
-#ifdef DEBUG
-        cout << wait_list << " " << wait_list[choose] << "\n\n";
-#endif
         ++count;
     }
 

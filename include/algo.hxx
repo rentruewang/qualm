@@ -29,9 +29,6 @@ class AlgoTopology : public Topology {
         return make_unique<AlgoTopology>(*this);
     }
 
-    void print_gates_with_next();
-    void print_gates_with_prev();
-
    private:
     std::vector<size_t> last_gate_;
 };

@@ -81,9 +81,6 @@ void Greedy::assign_gates(unique_ptr<QFTRouter> router) {
 
         size_t gate_idx = executable_with_fallback(*router, wait_list);
         route_one_gate(*router, gate_idx);
-#ifdef DEBUG
-        cout << "waitlist: " << wait_list << " " << gate_idx << "\n\n";
-#endif
         ++count;
     }
     assert(count == topo_->get_num_gates());

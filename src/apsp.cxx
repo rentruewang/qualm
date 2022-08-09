@@ -61,10 +61,5 @@ static ShortestPath floyd_warshall(torch::Tensor adj_mat) {
         pointer.index({i, i}) = -1;
     }
 
-#ifdef DEBUG
-    std::cout << cost_mat << std::endl;
-    std::cout << pointer << std::endl;
-#endif
-
     return {cost_mat, pointer};
 }

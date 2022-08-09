@@ -101,8 +101,8 @@ size_t Base::get_executable(QFTRouter& router) const {
 
 size_t Base::get_executable(QFTRouter& router,
                             const vector<size_t>& wait_list) const {
-    const auto& avail_gates = topo_->get_avail_gates();
-    for (size_t gate_idx : wait_list) {
+    [[maybe_unused]] const auto& avail_gates = topo_->get_avail_gates();
+    for ([[maybe_unused]] size_t gate_idx : wait_list) {
         assert(find(avail_gates.cbegin(), avail_gates.cend(), gate_idx) !=
                avail_gates.end());
     }

@@ -271,9 +271,6 @@ device::Operation Device::execute_single(Operator oper, size_t q) {
     qubit.reset();
     Operation op(oper, make_tuple(q, ERROR_CODE),
                  make_tuple(starttime, endtime));
-#ifdef DEBUG
-    cout << op << "\n";
-#endif
     return op;
 }
 
@@ -309,12 +306,8 @@ vector<device::Operation> Device::duostra_routing(Operator op,
     t1.take_route(t1.get_cost(), 0);
     tuple<bool, size_t> touch0 = touch_adj(t0, pq, false);
     bool is_adj = get<0>(touch0);
-#ifdef DEBUG
-    tuple<bool, size_t> touch1 = touch_adj(t1, pq, true);
+    auto touch1 = touch_adj(t1, pq, true);
     assert(is_adj == get<0>(touch1));
-#else
-    touch_adj(t1, pq, true);
-#endif
 
     while (!is_adj)  // set not adjacent
     {
@@ -344,25 +337,15 @@ vector<device::Operation> Device::duostra_routing(Operator op,
     vector<Operation> ops =
         traceback(op, get_qubit(q0_idx), get_qubit(q1_idx), t0, t1);
 
-#ifdef DEBUG
-    for (size_t i = 0; i < ops.size(); ++i) {
-        cout << ops[i] << "\n";
-    }
-#endif
-
-#ifdef DEBUG
     vector<bool> checker(qubits_.size(), false);
-#endif
     for (size_t i = 0; i < qubits_.size(); ++i) {
         Qubit& qubit = qubits_[i];
         qubit.reset();
         assert(qubit.get_topo_qubit() < qubits_.size());
-#ifdef DEBUG
         if (i != ERROR_CODE) {
             assert(checker[i] == false);
             checker[i] = true;
         }
-#endif
     }
     return ops;
 }
