@@ -23,7 +23,8 @@ unordered_map<size_t, vector<size_t>> Topology::gate_by_generation(
     }
 
     size_t count = 0;
-    for (const auto& [_, gen_ids] : gen_map) {
+    for (const auto& [gate_id, gen_ids] : gen_map) {
+        (void)gate_id;
         count += gen_ids.size();
     }
     assert(count == map.size() &&

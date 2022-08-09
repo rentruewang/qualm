@@ -49,6 +49,8 @@ class Base {
                           bool forget = false);
 
     size_t get_executable(QFTRouter& router) const;
+    size_t get_executable(QFTRouter& router,
+                          const vector<size_t>& wait_list) const;
 
    protected:
     unique_ptr<topo::Topology> topo_;
@@ -115,8 +117,9 @@ class Greedy : public Base {
     size_t greedy_fallback(const QFTRouter& router,
                            const std::vector<size_t>& wait_list,
                            size_t gate_idx) const;
-    size_t executable_with_fallback(QFTRouter& router,
-                                    const std::vector<size_t>& wait_list) const;
+    virtual size_t executable_with_fallback(
+        QFTRouter& router,
+        const std::vector<size_t>& wait_list) const;
     void assign_gates(unique_ptr<QFTRouter> router) override;
 };
 
@@ -134,79 +137,14 @@ class Onion : public Greedy {
 
     void assign_gates(unique_ptr<QFTRouter> router) override;
 
-    void assign_generation(
+    size_t executable_with_fallback(
         QFTRouter& router,
-        std::unordered_map<size_t, std::vector<size_t>>& gen_to_gates,
-        TqdmWrapper& bar,
-        size_t& total_size);
-    void assign_from_wait_list(QFTRouter& router,
-                               vector<size_t>& wait_list,
-                               size_t& total_size);
-};
+        const std::vector<size_t>& wait_list) const override;
 
-struct TreeNodeConf {
-    // Never cache any children unless children() is called.
-    bool never_cache;
-    // Execute the single gates when they are available.
-    bool exec_single;
-    // The number of childrens to consider,
-    // selected with some ops_cost heuristic.
-    size_t candidates;
-};
-
-// This is a node of the heuristic search tree.
-class TreeNode {
-   public:
-    TreeNode(TreeNodeConf conf,
-             size_t gate_idx,
-             unique_ptr<QFTRouter> router,
-             unique_ptr<Base> scheduler,
-             size_t max_cost);
-    TreeNode(TreeNodeConf conf,
-             vector<size_t>&& gate_indices,
-             unique_ptr<QFTRouter> router,
-             unique_ptr<Base> scheduler,
-             size_t max_cost);
-    TreeNode(const TreeNode& other);
-    TreeNode(TreeNode&& other);
-
-    TreeNode& operator=(const TreeNode& other);
-    TreeNode& operator=(TreeNode&& other);
-
-    TreeNode best_child(int depth);
-
-    size_t best_cost(int depth);
-    size_t best_cost() const;
-
-    const QFTRouter& router() const { return *router_; }
-    const Base& scheduler() const { return *scheduler_; }
-
-    const vector<size_t>& executed_gates() const { return gate_indices_; }
-
-    bool done() const { return scheduler().get_avail_gates().empty(); }
-    bool is_leaf() const { return children_.empty(); }
-    void grow_if_needed();
-
-   private:
-    TreeNodeConf conf_;
-
-    // The head of the node.
-    vector<size_t> gate_indices_;
-
-    // Using vector to pointer so that frequent cache misses
-    // won't be as bad in parallel code.
-    vector<TreeNode> children_;
-
-    // The state of duostra.
-    size_t max_cost_;
-    unique_ptr<QFTRouter> router_;
-    unique_ptr<Base> scheduler_;
-
-    vector<TreeNode>&& children();
-
-    void grow();
-    void route_internal_gates();
-    size_t immediate_next() const;
+    size_t assign_generation(
+        QFTRouter& router,
+        std::unordered_map<size_t, std::vector<size_t>>& gen_to_gates);
+    void assign_from_wait_list(QFTRouter& router, vector<size_t>& wait_list);
 };
 
 class Dora : public Greedy {

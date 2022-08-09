@@ -1,6 +1,7 @@
 #include "qft_scheduler.hxx"
 
 using namespace scheduler;
+using namespace std;
 
 Onion::Onion(unique_ptr<Topology> topo, const json& conf)
     : Greedy(move(topo), conf),
@@ -23,30 +24,29 @@ void Onion::assign_gates(unique_ptr<QFTRouter> router) {
 
     TqdmWrapper bar{num_gates};
 
-    // Used for debugging.
-    size_t total_size = 0;
-    for (const auto& gg : gen_to_gates) {
-        total_size += gg.second.size();
-    }
-    assert(total_size == num_gates);
-
     while (gen_to_gates.size()) {
-        assign_generation(*router, gen_to_gates, bar, total_size);
+        size_t amount = assign_generation(*router, gen_to_gates);
+        for (size_t i = 0; i < amount; ++i, ++bar)
+            ;
     }
 
     auto& avail_gates = topo_->get_avail_gates();
     assert(avail_gates.empty());
+    assert(bar.done());
 
-    assert(total_size == 0);
-
-    std::cout << avail_gates.size() << "\n";
+    cout << avail_gates.size() << "\n";
 }
 
-void Onion::assign_generation(
+size_t Onion::executable_with_fallback(
     QFTRouter& router,
-    std::unordered_map<size_t, std::vector<size_t>>& gen_to_gates,
-    TqdmWrapper& bar,
-    size_t& total_size) {
+    const std::vector<size_t>& wait_list) const {
+    size_t gate_idx = get_executable(router, wait_list);
+    return greedy_fallback(router, wait_list, gate_idx);
+}
+
+size_t Onion::assign_generation(
+    QFTRouter& router,
+    unordered_map<size_t, vector<size_t>>& gen_to_gates) {
     using gen_pair = const pair<size_t, vector<size_t>>&;
     auto select =
         first_mode_ ? [](gen_pair a, gen_pair b) { return a.first < b.first; }
@@ -59,24 +59,23 @@ void Onion::assign_generation(
 
     auto& [distance, wait_list] = *youngest;
 
-    for (; wait_list.size() > 0; ++bar) {
-        assign_from_wait_list(router, wait_list, total_size);
+    const size_t iter_count = wait_list.size();
+    for (size_t i = 0; i < iter_count; ++i) {
+        assign_from_wait_list(router, wait_list);
     }
 
     assert(wait_list.empty());
     gen_to_gates.erase(distance);
+    return iter_count;
 }
 
 void Onion::assign_from_wait_list(QFTRouter& router,
-                                  vector<size_t>& wait_list,
-                                  size_t& total_size) {
+                                  vector<size_t>& wait_list) {
     size_t gate_idx = executable_with_fallback(router, wait_list);
 
     auto erase_idx = remove(wait_list.begin(), wait_list.end(), gate_idx);
     assert(wait_list.end() - erase_idx == 1);
     wait_list.erase(erase_idx, wait_list.end());
-
-    --total_size;
     route_one_gate(router, gate_idx);
 }
 
