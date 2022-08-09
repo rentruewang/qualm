@@ -72,10 +72,7 @@ size_t Onion::assign_generation(
 void Onion::assign_from_wait_list(QFTRouter& router,
                                   vector<size_t>& wait_list) {
     size_t gate_idx = executable_with_fallback(router, wait_list);
-
-    auto erase_idx = remove(wait_list.begin(), wait_list.end(), gate_idx);
-    assert(wait_list.end() - erase_idx == 1);
-    wait_list.erase(erase_idx, wait_list.end());
+    unstable_erase(wait_list, gate_idx);
     route_one_gate(router, gate_idx);
 }
 

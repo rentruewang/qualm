@@ -11,14 +11,23 @@ template unordered_map<size_t, vector<size_t>> Topology::gate_by<true>() const;
 
 template unordered_map<size_t, vector<size_t>> Topology::gate_by<false>() const;
 
+template void topo::unstable_erase<size_t>(vector<size_t>& vec,
+                                           const size_t& value);
+
+template <typename T>
+void topo::unstable_erase(vector<T>& vec, const T& value) {
+    auto erase_idx = find(vec.begin(), vec.end(), value);
+    assert(erase_idx != vec.end());
+    swap(*erase_idx, *vec.rbegin());
+    vec.pop_back();
+}
+
 void Topology::update_avail_gates(size_t executed) {
     assert(find(avail_gates_.cbegin(), avail_gates_.cend(), executed) !=
            avail_gates_.cend());
     const Gate& g_exec = get_gate(executed);
 
-    auto erase_idx = remove(avail_gates_.begin(), avail_gates_.end(), executed);
-    assert(avail_gates_.end() - erase_idx == 1);
-    avail_gates_.erase(erase_idx, avail_gates_.end());
+    unstable_erase(avail_gates_, executed);
 
     assert(g_exec.get_id() == executed);
 

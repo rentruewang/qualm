@@ -33,6 +33,10 @@ class DependencyGraph {
     size_t num_qubits_;
     vector<Gate> gates_;
 };
+
+template <typename T>
+void unstable_erase(vector<T>& vec, const T& value);
+
 class Topology {
    public:
     Topology()
