@@ -1,5 +1,6 @@
 #pragma once
 
+#include <algorithm>
 #include <cassert>
 #include <climits>
 #include <cmath>
@@ -19,7 +20,13 @@ using namespace std;
 class Gate {
    public:
     Gate(size_t id, Operator type, tuple<size_t, size_t> qs)
-        : id_(id), type_(type), qubits_(qs), prevs_({}), nexts_({}) {}
+        : id_(id), type_(type), qubits_(qs), prevs_({}), nexts_({}) {
+        size_t& first = get<0>(qubits_);
+        size_t& second = get<1>(qubits_);
+        if (first > second) {
+            swap(first, second);
+        }
+    }
 
     Gate(const Gate& other) = delete;
 
@@ -49,7 +56,7 @@ class Gate {
 
     bool is_avail(const unordered_map<size_t, size_t>& executed_gates) const {
         return all_of(prevs_.cbegin(), prevs_.cend(), [&](size_t prev) -> bool {
-            return executed_gates.find(prev) != executed_gates.end();
+            return executed_gates.find(prev) != executed_gates.cend();
         });
     }
 

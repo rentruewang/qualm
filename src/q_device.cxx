@@ -6,7 +6,7 @@
 using namespace device;
 using namespace std;
 
-ostream& device::operator<<(ostream& os, device::Operation& op) {
+ostream& device::operator<<(ostream& os, const Operation& op) {
     os << left;
     size_t from = get<0>(op.duration_);
     size_t to = get<1>(op.duration_);

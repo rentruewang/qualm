@@ -1,5 +1,6 @@
 #include "flow.hxx"
 
+#include "checker.hxx"
 #include "qft_mapper.hxx"
 
 using namespace std;
@@ -12,9 +13,9 @@ using Scheduler = scheduler::Base;
 
 static unique_ptr<Topology> new_topo(const json& conf);
 static Device create_device(const json& conf);
-static void place(const json& conf_mapper,
-                  const vector<size_t>& assign,
-                  Device& device);
+static vector<size_t> place_device(const json& conf_mapper,
+                                   const vector<size_t>& assign,
+                                   Device& device);
 static unique_ptr<Scheduler> new_scheduler(const json& conf_mapper,
                                            unique_ptr<Topology> topo,
                                            const string& scheduler_typ);
@@ -22,6 +23,11 @@ static unique_ptr<Scheduler> new_scheduler(const json& conf_mapper,
 static unique_ptr<QFTRouter> new_router(const json& conf_mapper,
                                         const string& scheduler_typ,
                                         Device&& device);
+
+void check_result(const Topology& topo,
+                  const Device& device,
+                  const Scheduler& sched,
+                  const vector<size_t>& assign);
 
 static void dump_result(const json& conf,
                         const vector<size_t>& assign,
@@ -37,6 +43,10 @@ size_t flow(const json& conf, vector<size_t> assign, bool io) {
     // create device
     auto device{create_device(conf)};
 
+    // Copy device and topo for checks.
+    auto topo_copy = topo->clone();
+    auto device_copy{device};
+
     if (topo->get_num_qubits() > device.get_num_qubits()) {
         cerr << "You cannot assign more QFT qubits than the device." << endl;
         abort();
@@ -46,7 +56,7 @@ size_t flow(const json& conf, vector<size_t> assign, bool io) {
     json conf_mapper = json_get<json>(conf, "mapper");
 
     // place
-    place(conf_mapper, assign, device);
+    assign = place_device(conf_mapper, assign, device);
 
     // scheduler
     const string scheduler_typ = json_get<string>(conf_mapper, "scheduler");
@@ -58,6 +68,12 @@ size_t flow(const json& conf, vector<size_t> assign, bool io) {
     // routing
     cout << "routing..." << endl;
     sched->assign_gates_and_sort(move(router));
+
+    // checker
+    bool check = json_get<bool>(conf, "check");
+    if (check) {
+        check_result(*topo_copy, device_copy, *sched, assign);
+    }
 
     // dump
     bool dump = json_get<bool>(conf, "dump");
@@ -150,16 +166,17 @@ Device create_device(const json& conf) {
     return {device_file, SINGLE_CYCLE, SWAP_CYCLE, CX_CYCLE};
 }
 
-void place(const json& conf_mapper,
-           const vector<size_t>& assign,
-           Device& device) {
+vector<size_t> place_device(const json& conf_mapper,
+                            const vector<size_t>& assign,
+                            Device& device) {
     cout << "creating placer..." << endl;
     if (assign.empty()) {
         string placer_typ = json_get<string>(conf_mapper, "placer");
         auto plc = placer::get(placer_typ);
-        plc->place_and_assign(device);
+        return plc->place_and_assign(device);
     } else {
         device.place(assign);
+        return assign;
     }
 }
 
@@ -168,19 +185,31 @@ unique_ptr<Scheduler> new_scheduler(const json& conf_mapper,
                                     const string& scheduler_typ) {
     cout << "creating scheduler..." << endl;
     json greedy_conf = json_get<json>(conf_mapper, "greedy_conf");
-    return scheduler::get(scheduler_typ, move(topo), greedy_conf);
+    return scheduler::get(scheduler_typ, topo->clone(), greedy_conf);
 }
 
 unique_ptr<QFTRouter> new_router(const json& conf_mapper,
                                  const string& scheduler_typ,
                                  Device&& device) {
     cout << "creating router..." << endl;
+
     string router_typ = json_get<string>(conf_mapper, "router");
     bool orient = json_get<bool>(conf_mapper, "orientation");
     string cost = (scheduler_typ == "greedy" || scheduler_typ == "onion")
                       ? json_get<string>(conf_mapper, "cost")
                       : "start";
+
     return make_unique<QFTRouter>(move(device), router_typ, cost, orient);
+}
+
+void check_result(const Topology& topo,
+                  const Device& device,
+                  const Scheduler& sched,
+                  const vector<size_t>& assign) {
+    Checker checker{topo, device, sched.get_operations(), assign};
+
+    checker.test_operations();
+    std::cout << "Check passed." << std::endl;
 }
 
 void dump_result(const json& conf,

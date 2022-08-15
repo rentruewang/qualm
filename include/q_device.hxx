@@ -17,22 +17,20 @@
 using nlohmann::json;
 
 namespace device {
+using namespace std;
 class Operation {
    public:
-    friend std::ostream& operator<<(std::ostream&, Operation&);
-    friend std::ostream& operator<<(std::ostream&, const Operation&);
+    friend ostream& operator<<(ostream&, const Operation&);
     friend void to_json(json& j, const Operation& op);
 
-    Operation(Operator oper,
-              std::tuple<size_t, size_t> qs,
-              std::tuple<size_t, size_t> du)
+    Operation(Operator oper, tuple<size_t, size_t> qs, tuple<size_t, size_t> du)
         : oper_(oper), qubits_(qs), duration_(du) {
         // sort qs
-        size_t a = std::get<0>(qs);
-        size_t b = std::get<1>(qs);
+        size_t a = get<0>(qs);
+        size_t b = get<1>(qs);
         assert(a != b);
         if (a > b) {
-            qubits_ = std::make_tuple(b, a);
+            qubits_ = make_tuple(b, a);
         }
     }
     Operation(const Operation& other)
@@ -47,21 +45,20 @@ class Operation {
         return *this;
     }
 
-    size_t get_cost() const { return std::get<1>(duration_); }
-    size_t get_op_time() const { return std::get<0>(duration_); }
-    std::tuple<size_t, size_t> get_duration() const { return duration_; }
+    size_t get_cost() const { return get<1>(duration_); }
+    size_t get_op_time() const { return get<0>(duration_); }
+    tuple<size_t, size_t> get_duration() const { return duration_; }
     Operator get_operator() const { return oper_; }
-    std::string get_operator_name() const { return operator_get_name(oper_); }
-    std::tuple<size_t, size_t> get_qubits() const { return qubits_; }
+    string get_operator_name() const { return operator_get_name(oper_); }
+    tuple<size_t, size_t> get_qubits() const { return qubits_; }
 
    private:
     Operator oper_;
-    std::tuple<size_t, size_t> qubits_;
-    std::tuple<size_t, size_t> duration_;  // <from, to>
+    tuple<size_t, size_t> qubits_;
+    tuple<size_t, size_t> duration_;  // <from, to>
 };
 
-std::ostream& operator<<(std::ostream&, Operation&);
-std::ostream& operator<<(std::ostream&, const Operation&);
+ostream& operator<<(ostream&, const Operation&);
 void to_json(json& j, const Operation& op);
 
 bool op_order(const Operation& a, const Operation& b);
@@ -99,7 +96,7 @@ class AStarComp {
 
 class Qubit {
    public:
-    friend std::ostream& operator<<(std::ostream& os, const device::Qubit& q);
+    friend ostream& operator<<(ostream& os, const Qubit& q);
     Qubit(const size_t i);
     Qubit(const Qubit& other);
     Qubit(Qubit&& other);
@@ -112,7 +109,7 @@ class Qubit {
     void add_adj(size_t i);
     void set_topo_qubit(size_t i);
     void set_occupied_time(size_t t);
-    const std::vector<size_t>& get_adj_list() const;
+    const vector<size_t>& get_adj_list() const;
 
     // A*
     size_t get_cost() const;
@@ -127,7 +124,7 @@ class Qubit {
 
    private:
     size_t id_;
-    std::vector<size_t> adj_list_;
+    vector<size_t> adj_list_;
     size_t topo_qubit_;
     size_t occupied_until_;
 
@@ -140,63 +137,58 @@ class Qubit {
     bool taken_;
 };
 
-std::ostream& operator<<(std::ostream& os, const device::Qubit& q);
+ostream& operator<<(ostream& os, const Qubit& q);
 
 class Device {
    public:
-    Device(std::fstream& file, size_t r, size_t s, size_t cx) noexcept;
-    Device(std::vector<std::vector<size_t>>&,
-           size_t r,
-           size_t s,
-           size_t cx) noexcept;
+    Device(fstream& file, size_t r, size_t s, size_t cx) noexcept;
+    Device(vector<vector<size_t>>&, size_t r, size_t s, size_t cx) noexcept;
     Device(const Device& other) noexcept;
     Device(Device&& other) noexcept;
 
     const size_t SINGLE_CYCLE, SWAP_CYCLE, CX_CYCLE;
 
     size_t get_num_qubits() const;
-    std::vector<size_t> mapping() const;
+    vector<size_t> mapping() const;
     size_t get_shortest_cost(size_t i, size_t j) const;
 
     Qubit& get_qubit(size_t i);
     const Qubit& get_qubit(size_t i) const;
 
     Operation execute_single(Operator op, size_t q);
-    std::vector<Operation> duostra_routing(Operator op,
-                                           std::tuple<size_t, size_t> qs,
-                                           bool orient);
-    std::vector<Operation> apsp_routing(Operator op,
-                                        std::tuple<size_t, size_t> qs,
-                                        bool orient);
+    vector<Operation> duostra_routing(Operator op,
+                                      tuple<size_t, size_t> qs,
+                                      bool orient);
+    vector<Operation> apsp_routing(Operator op,
+                                   tuple<size_t, size_t> qs,
+                                   bool orient);
 
-    void print_device_state(std::ostream& out);
-    void place(const std::vector<size_t>& assign);  // topo2device
+    void print_device_state(ostream& out);
+    void place(const vector<size_t>& assign);  // topo2device
     void init_apsp();
     void reset();
 
    private:
     // A*
-    std::tuple<bool, size_t> touch_adj(
-        device::Qubit& qubit,
-        std::priority_queue<device::AStarNode,
-                            std::vector<device::AStarNode>,
-                            device::AStarComp>& pq,
+    tuple<bool, size_t> touch_adj(
+        Qubit& qubit,
+        priority_queue<AStarNode, vector<AStarNode>, AStarComp>& pq,
         bool swtch);  // return <if touch target, target id>, swtch: false q0
                       // propagate, true q1 propagate
-    std::vector<Operation> traceback(Operator op,
-                                     device::Qubit& q0,
-                                     device::Qubit& q1,
-                                     device::Qubit& t0,
-                                     device::Qubit& t1);  // standalone
+    vector<Operation> traceback(Operator op,
+                                Qubit& q0,
+                                Qubit& q1,
+                                Qubit& t0,
+                                Qubit& t1);  // standalone
 
     // apsp
-    std::tuple<size_t, size_t> next_swap_cost(size_t source, size_t target);
+    tuple<size_t, size_t> next_swap_cost(size_t source, size_t target);
 
     // general
     void apply_gate(const Operation& op);
 
     // data member
-    std::vector<Qubit> qubits_;
-    std::vector<std::vector<size_t>> shortest_path_, shortest_cost_;
+    vector<Qubit> qubits_;
+    vector<vector<size_t>> shortest_path_, shortest_cost_;
 };
 }  // namespace device
