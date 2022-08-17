@@ -380,6 +380,22 @@ tuple<bool, size_t> Device::touch_adj(Qubit& qubit,
     return make_tuple(false, ERROR_CODE);
 }
 
+void Device::update_trace(size_t trace,
+                          size_t qubit,
+                          vector<Operation>& ops) const {
+    while (trace != qubit) {
+        const auto& q_trace = get_qubit(trace);
+        size_t trace_pred_0 = q_trace.get_pred();
+
+        size_t swap_time = q_trace.get_swap_time();
+        Operation swap_gate(Operator::Swap, make_tuple(trace, trace_pred_0),
+                            make_tuple(swap_time, swap_time + SWAP_CYCLE));
+        ops.push_back(swap_gate);
+
+        trace = trace_pred_0;
+    }
+}
+
 vector<device::Operation> Device::traceback([[maybe_unused]] Operator op,
                                             Qubit& q0,
                                             Qubit& q1,
@@ -398,32 +414,8 @@ vector<device::Operation> Device::traceback([[maybe_unused]] Operator op,
                       make_tuple(op_time, op_time + CX_CYCLE));
     ops.push_back(CX_gate);
 
-    size_t trace_0 = q0.get_id();
-    size_t trace_1 = q1.get_id();
-    while (trace_0 != t0.get_id())  // trace 0
-    {
-        Qubit& q_trace_0 = get_qubit(trace_0);
-        size_t trace_pred_0 = q_trace_0.get_pred();
-
-        size_t swap_time = q_trace_0.get_swap_time();
-        Operation swap_gate(Operator::Swap, make_tuple(trace_0, trace_pred_0),
-                            make_tuple(swap_time, swap_time + SWAP_CYCLE));
-        ops.push_back(swap_gate);
-
-        trace_0 = trace_pred_0;
-    }
-    while (trace_1 != t1.get_id())  // trace 1
-    {
-        Qubit& q_trace_1 = get_qubit(trace_1);
-        size_t trace_pred_1 = q_trace_1.get_pred();
-
-        size_t swap_time = q_trace_1.get_swap_time();
-        Operation swap_gate(Operator::Swap, make_tuple(trace_1, trace_pred_1),
-                            make_tuple(swap_time, swap_time + SWAP_CYCLE));
-        ops.push_back(swap_gate);
-
-        trace_1 = trace_pred_1;
-    }
+    update_trace(q0.get_id(), t0.get_id(), ops);
+    update_trace(q1.get_id(), t1.get_id(), ops);
 
     sort(ops.begin(), ops.end(), op_order);
     for (size_t i = 0; i < ops.size(); ++i) {

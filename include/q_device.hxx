@@ -170,11 +170,14 @@ class Device {
 
    private:
     // A*
+
+    // return <if touch target, target id>, swtch: false q0
+    // propagate, true q1 propagate
     tuple<bool, size_t> touch_adj(
         Qubit& qubit,
         priority_queue<AStarNode, vector<AStarNode>, AStarComp>& pq,
-        bool swtch);  // return <if touch target, target id>, swtch: false q0
-                      // propagate, true q1 propagate
+        bool swtch);
+    void update_trace(size_t trace, size_t qubit, vector<Operation>& ops) const;
     vector<Operation> traceback(Operator op,
                                 Qubit& q0,
                                 Qubit& q1,
