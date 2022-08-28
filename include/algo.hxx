@@ -14,23 +14,23 @@ using namespace std;
 
 class AlgoTopology : public Topology {
    public:
-    AlgoTopology(std::fstream& f, bool IBMGate) : last_gate_({}) {
+    AlgoTopology(fstream& f, bool IBMGate) : last_gate_({}) {
         parse(f, IBMGate);
     }
     AlgoTopology(const AlgoTopology& other) : Topology(other), last_gate_({}) {}
     AlgoTopology(AlgoTopology&& other)
-        : Topology(std::move(other)), last_gate_({}) {}
+        : Topology(move(other)), last_gate_({}) {}
 
     ~AlgoTopology() {}
 
-    void parse(std::fstream&, bool IBMGate);
+    void parse(fstream&, bool IBMGate);
 
     unique_ptr<Topology> clone() const override {
         return make_unique<AlgoTopology>(*this);
     }
 
    private:
-    std::vector<size_t> last_gate_;
+    vector<size_t> last_gate_;
 };
 
 };  // namespace topo

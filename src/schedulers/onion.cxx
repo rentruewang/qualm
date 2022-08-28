@@ -37,9 +37,8 @@ void Onion::assign_gates(unique_ptr<QFTRouter> router) {
     cout << avail_gates.size() << "\n";
 }
 
-size_t Onion::executable_with_fallback(
-    QFTRouter& router,
-    const std::vector<size_t>& wait_list) const {
+size_t Onion::executable_with_fallback(QFTRouter& router,
+                                       const vector<size_t>& wait_list) const {
     size_t gate_idx = get_executable(router, wait_list);
     return greedy_fallback(router, wait_list, gate_idx);
 }

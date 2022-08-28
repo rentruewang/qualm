@@ -4,13 +4,14 @@
 #include "util.hxx"
 
 using namespace scheduler;
+using namespace std;
 
 class TopologyCandidate {
    public:
     TopologyCandidate(const topo::Topology& topo, size_t candidate)
         : topo_(topo), cands_(candidate) {}
 
-    std::vector<size_t> get_avail_gates() const {
+    vector<size_t> get_avail_gates() const {
         auto& gates = topo_.get_avail_gates();
 
         if (gates.size() < cands_) {
@@ -61,9 +62,8 @@ Greedy::Greedy(const Greedy& other) : Base(other), conf_(other.conf_) {}
 
 Greedy::Greedy(Greedy&& other) : Base(move(other)), conf_(other.conf_) {}
 
-size_t Greedy::executable_with_fallback(
-    QFTRouter& router,
-    const std::vector<size_t>& wait_list) const {
+size_t Greedy::executable_with_fallback(QFTRouter& router,
+                                        const vector<size_t>& wait_list) const {
     size_t gate_idx = get_executable(router);
     return greedy_fallback(router, wait_list, gate_idx);
 }
@@ -87,7 +87,7 @@ void Greedy::assign_gates(unique_ptr<QFTRouter> router) {
 }
 
 size_t Greedy::greedy_fallback(const QFTRouter& router,
-                               const std::vector<size_t>& wait_list,
+                               const vector<size_t>& wait_list,
                                size_t gate_idx) const {
     if (gate_idx != ERROR_CODE) {
         return gate_idx;

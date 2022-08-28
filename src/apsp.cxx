@@ -9,7 +9,7 @@
 using namespace std;
 using namespace torch::indexing;
 
-std::ostream& operator<<(std::ostream& out, const ShortestPath sp) {
+ostream& operator<<(ostream& out, const ShortestPath sp) {
     return out << "Cost:\n"
                << sp.cost << '\n'
                << "Pointer:\n"

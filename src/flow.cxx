@@ -209,7 +209,7 @@ void check_result(const Topology& topo,
     Checker checker{topo, device, sched.get_operations(), assign};
 
     checker.test_operations();
-    std::cout << "Check passed." << std::endl;
+    cout << "Check passed." << endl;
 }
 
 void dump_result(const json& conf,
