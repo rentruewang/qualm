@@ -87,14 +87,14 @@ class Static : public Base {
     void assign_gates(unique_ptr<QFTRouter> router) override;
 };
 
-struct GreedyConf {
-    GreedyConf()
+struct ShortestPathConf {
+    ShortestPathConf()
         : avail_typ(true),
           cost_typ(false),
           candidates(ERROR_CODE),
           apsp_coef(1) {}
 
-    GreedyConf(const json& conf);
+    ShortestPathConf(const json& conf);
 
     bool avail_typ;  // true is max, false is min
     bool cost_typ;   // true is max, false is min
@@ -102,17 +102,17 @@ struct GreedyConf {
     size_t apsp_coef;
 };
 
-class Greedy : public Base {
+class ShortestPath : public Base {
    public:
-    Greedy(unique_ptr<topo::Topology> topo, const json& conf);
-    Greedy(const Greedy& other);
-    Greedy(Greedy&& other);
-    ~Greedy() override {}
+    ShortestPath(unique_ptr<topo::Topology> topo, const json& conf);
+    ShortestPath(const ShortestPath& other);
+    ShortestPath(ShortestPath&& other);
+    ~ShortestPath() override {}
 
     unique_ptr<Base> clone() const override;
 
    protected:
-    GreedyConf conf_;
+    ShortestPathConf conf_;
 
     size_t greedy_fallback(const QFTRouter& router,
                            const std::vector<size_t>& wait_list,
@@ -123,7 +123,7 @@ class Greedy : public Base {
     void assign_gates(unique_ptr<QFTRouter> router) override;
 };
 
-class Onion : public Greedy {
+class Onion : public ShortestPath {
    public:
     Onion(unique_ptr<Topology> topo, const json& conf);
     Onion(const Onion& other);
@@ -147,7 +147,7 @@ class Onion : public Greedy {
     void assign_from_wait_list(QFTRouter& router, vector<size_t>& wait_list);
 };
 
-class Dora : public Greedy {
+class Dora : public ShortestPath {
    public:
     Dora(unique_ptr<Topology> topo, const json& conf);
     Dora(const Dora& other);

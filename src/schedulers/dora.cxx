@@ -12,7 +12,7 @@ using namespace std;
 using namespace scheduler;
 
 Dora::Dora(unique_ptr<Topology> topo, const json& conf)
-    : Greedy(move(topo), conf),
+    : ShortestPath(move(topo), conf),
       look_ahead(json_get<int>(conf, "depth")),
       never_cache_(json_get<bool>(conf, "never_cache")),
       exec_single_(json_get<bool>(conf, "exec_single")) {
@@ -20,13 +20,13 @@ Dora::Dora(unique_ptr<Topology> topo, const json& conf)
 }
 
 Dora::Dora(const Dora& other)
-    : Greedy(other),
+    : ShortestPath(other),
       look_ahead(other.look_ahead),
       never_cache_(other.never_cache_),
       exec_single_(other.exec_single_) {}
 
 Dora::Dora(Dora&& other)
-    : Greedy(other),
+    : ShortestPath(other),
       look_ahead(other.look_ahead),
       never_cache_(other.never_cache_),
       exec_single_(other.exec_single_) {}

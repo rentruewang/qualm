@@ -26,7 +26,7 @@ class TopologyCandidate {
     size_t cands_;
 };
 
-GreedyConf::GreedyConf(const json& conf) : GreedyConf() {
+ShortestPathConf::ShortestPathConf(const json& conf) : ShortestPathConf() {
     int cands = json_get<int>(conf, "candidates");
     if (cands > 0) {
         this->candidates = cands;
@@ -55,21 +55,24 @@ GreedyConf::GreedyConf(const json& conf) : GreedyConf() {
     }
 }
 
-Greedy::Greedy(unique_ptr<topo::Topology> topo, const json& conf)
+ShortestPath::ShortestPath(unique_ptr<topo::Topology> topo, const json& conf)
     : Base(move(topo)), conf_(conf) {}
 
-Greedy::Greedy(const Greedy& other) : Base(other), conf_(other.conf_) {}
+ShortestPath::ShortestPath(const ShortestPath& other)
+    : Base(other), conf_(other.conf_) {}
 
-Greedy::Greedy(Greedy&& other) : Base(move(other)), conf_(other.conf_) {}
+ShortestPath::ShortestPath(ShortestPath&& other)
+    : Base(move(other)), conf_(other.conf_) {}
 
-size_t Greedy::executable_with_fallback(QFTRouter& router,
-                                        const vector<size_t>& wait_list) const {
+size_t ShortestPath::executable_with_fallback(
+    QFTRouter& router,
+    const vector<size_t>& wait_list) const {
     size_t gate_idx = get_executable(router);
     return greedy_fallback(router, wait_list, gate_idx);
 }
 
-void Greedy::assign_gates(unique_ptr<QFTRouter> router) {
-    cout << "Greedy scheduler running..." << endl;
+void ShortestPath::assign_gates(unique_ptr<QFTRouter> router) {
+    cout << "ShortestPath scheduler running..." << endl;
 
     [[maybe_unused]] size_t count = 0;
     auto topo_wrap = TopologyCandidate(*topo_, conf_.candidates);
@@ -86,9 +89,9 @@ void Greedy::assign_gates(unique_ptr<QFTRouter> router) {
     assert(count == topo_->get_num_gates());
 }
 
-size_t Greedy::greedy_fallback(const QFTRouter& router,
-                               const vector<size_t>& wait_list,
-                               size_t gate_idx) const {
+size_t ShortestPath::greedy_fallback(const QFTRouter& router,
+                                     const vector<size_t>& wait_list,
+                                     size_t gate_idx) const {
     if (gate_idx != ERROR_CODE) {
         return gate_idx;
     }
@@ -108,6 +111,6 @@ size_t Greedy::greedy_fallback(const QFTRouter& router,
     return wait_list[list_idx];
 }
 
-unique_ptr<Base> Greedy::clone() const {
-    return make_unique<Greedy>(*this);
+unique_ptr<Base> ShortestPath::clone() const {
+    return make_unique<ShortestPath>(*this);
 }

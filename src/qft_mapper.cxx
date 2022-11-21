@@ -20,7 +20,7 @@ unique_ptr<Base> get(const string& typ, unique_ptr<Topology> topo, json& conf) {
     }
 
     if (typ == "greedy" || typ == "apsp") {
-        return make_unique<Greedy>(move(topo), conf);
+        return make_unique<ShortestPath>(move(topo), conf);
     }
 
     if (typ == "dora" || typ == "cks") {
